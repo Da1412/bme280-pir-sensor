@@ -1,11 +1,11 @@
 Wiring raspberry pi
-\nBME280:
-\nVin -> 3.3 v
-\nGND -> GND
-\nSDA -> GPIO2
-\nSCL -> GPIO3
+BME280:
+Vin -> 3.3 v
+GND -> GND
+SDA -> GPIO2
+SCL -> GPIO3
 
-\nPIR Sensor:
-\nVcc -> 5v
-\nGND -> GND
-\nDATA -> GPIO17
+PIR Sensor:
+Vcc -> 5v
+GND -> GND
+DATA -> GPIO17
