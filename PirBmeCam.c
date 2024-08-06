@@ -10,10 +10,17 @@
 #include "bme280.h"
 
 #define PIR_Pin 0
+int calibrationTime = 40;
 
 using namespace cv; 
 
 int main() {
+
+    printf("Wait For Calibration Time");
+    for (for int i = 0; i < calibrationTime; i++)
+        printf(".");
+    sleep(5);
+    
     if(wiringPiSetup() == -1) {
         printf("Wiring Pi Setup Error\n");
         return -1;
