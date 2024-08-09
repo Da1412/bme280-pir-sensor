@@ -1,6 +1,6 @@
 Wiring raspberry pi
 BME280:
-Vin -> 3.3 v
+Vin -> 5 v
 GND -> GND
 SDA -> GPIO2
 SCL -> GPIO3
