@@ -1,12 +1,11 @@
 import cv2
-import torch
 import serial
-
-# Initialize YOLOv5 model
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 
 # Set up serial communication
 arduino = serial.Serial('/dev/ttyUSB0', 9600)
+
+# Load pre-trained model for person detection (MobileNet SSD)
+net = cv2.dnn.readNetFromCaffe('deploy.prototxt', 'res10_300x300_ssd_iter_140000.caffemodel')
 
 # Open the webcam
 cap = cv2.VideoCapture(0)
@@ -16,17 +15,39 @@ while True:
     if not ret:
         break
 
-    # Run YOLOv5 on the frame
-    results = model(frame)
+    # Prepare the image for the network
+    h, w = frame.shape[:2]
+    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
 
-    # Check if a person is detected
-    if 'person' in results.names[results.pred[0][:, -1].cpu().numpy().astype(int)]:
-        arduino.write(b'H')  # Send signal to Arduino to turn on LED
+    # Pass the image through the network and obtain detections
+    net.setInput(blob)
+    detections = net.forward()
+
+    # Initialize a flag for person detection
+    person_detected = False
+
+    for i in range(detections.shape[2]):
+        confidence = detections[0, 0, i, 2]
+
+        # Filter weak detections
+        if confidence > 0.5:
+            box = detections[0, 0, i, 3:7] * [w, h, w, h]
+            (startX, startY, endX, endY) = box.astype("int")
+
+            # Assuming "person" is class 15 in this model (adjust as needed)
+            person_detected = True
+
+            # Draw the bounding box
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+    # Send signal to Arduino based on detection
+    if person_detected:
+        arduino.write(b'H')  # Turn on LED
     else:
-        arduino.write(b'L')  # Send signal to turn off LED
+        arduino.write(b'L')  # Turn off LED
 
     # Display the frame with detections
-    cv2.imshow('YOLOv5 Detection', frame)
+    cv2.imshow('Person Detection', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
