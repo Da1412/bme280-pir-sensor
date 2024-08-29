@@ -1,0 +1,35 @@
+import cv2
+import torch
+import serial
+
+# Initialize YOLOv5 model
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+
+# Set up serial communication
+arduino = serial.Serial('/dev/ttyUSB0', 9600)
+
+# Open the webcam
+cap = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Run YOLOv5 on the frame
+    results = model(frame)
+
+    # Check if a person is detected
+    if 'person' in results.names[results.pred[0][:, -1].cpu().numpy().astype(int)]:
+        arduino.write(b'H')  # Send signal to Arduino to turn on LED
+    else:
+        arduino.write(b'L')  # Send signal to turn off LED
+
+    # Display the frame with detections
+    cv2.imshow('YOLOv5 Detection', frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
